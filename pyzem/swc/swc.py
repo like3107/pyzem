@@ -59,7 +59,7 @@ def compute_surface_area(tn, range_radius):
 def compute_pathdist(tn):
     #compute the path distance between a node and soma
     result = 0
-    while tn.parent._type != 1:
+    while tn.parent._type != 1 and tn.parent._id != -1:
         result += tn.parent_distance()
         tn = tn.parent
     result += tn.parent_distance()
@@ -74,6 +74,40 @@ def compute_eucdist(tn):
     tn = tn.parent
     result += tn.distance(tn1)
     return result
+def branch_order(tn):
+
+#    if len(tn.children) ==0:
+    if tn._id == 1:
+        branchorder = 1
+    else:
+#        branchorder = 1+maxbranch_order(tn.children)
+        branchorder = 1+branch_order(tn.parent)
+    return branchorder
+'''
+def maxbranch_order(tnlist):
+    brolist=[]
+    for tn in tnlist:
+        br = branch_order(tn)
+        brolist.append(br)
+    maxbro = max(brolist)
+    return maxbro
+'''
+def parent_angle(tn):
+    if tn.parent._id == -1:
+        p_angle = 0
+    elif tn.parent.parent._id ==-1:
+        p_angle = -1
+    else: 
+        d1 = tn.distance(tn.parent)
+        d2 = tn.parent.distance(tn.parent.parent)
+        d3 = tn.distance(tn.parent.parent)
+        if (d1!=0) and (d2!=0):
+            p_angle = (d1*d1+d2*d2-d3*d3)/(2*d1*d2)
+        else:
+            p_angle =0
+
+    return p_angle
+
 
 class SwcNode(NodeMixin):
     """Represents a node in a SWC tree.
@@ -275,6 +309,7 @@ class SwcTree:
                     count +=1
                     maxdist = self.pathdistance()[1]
                     mindist = self.pathdistance()[2]
+        self.cutcount = count
         print('Compelete!Delete %d nodes in all' % (count))
 
 
@@ -447,8 +482,6 @@ class SwcTree:
                 allpathdist.append(pathdist)
         #print(allpathdist)
         return([sum(allpathdist),max(allpathdist),min(allpathdist),sum(allpathdist)/len(allpathdist)])
-
-        
 
     def scale(self, sx, sy, sz, adjusting_radius=True):
         niter = iterators.PreOrderIter(self._root)
